@@ -11,6 +11,7 @@ import com.pu.service.model.UserModel;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -53,7 +54,15 @@ public class UserServiceImpl implements IUserService {
         }
         //实现model -> user
         //insertSelective 防止插入null，而是插入字段为null时，插入数据库默认的值。
-        userMapper.insertSelective(convertFromUserModel(userModel));
+        User user = convertFromUserModel(userModel);
+        try{
+            userMapper.insertSelective(user);
+        }catch (DuplicateKeyException ex){
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"手机号已经注册");
+        }
+        userMapper.insertSelective(user);
+        //等到插入后的id
+        userModel.setId(user.getId());
         userPasswordMapper.insertSelective(convertPasswordFromModel(userModel));
     }
 

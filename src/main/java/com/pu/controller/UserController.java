@@ -12,18 +12,25 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
 import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 /**
  * Description:
  * @CrossOrigin(allowCredentials = "true",allowedHeaders = "*")
  * @CrossOrigin 任何域发过来默认授信
+ * DEFAULT_ALLOWED_HEADERS 默认为true 需配合前端设置xhrFields授信后使得跨域session共享
  * Created By @Author my on @Date 2020/3/22 15:19
  */
 @Controller("user")
 @RequestMapping("/user")
-@CrossOrigin(allowCredentials = "true",allowedHeaders = "*")
+@CrossOrigin(allowCredentials = "true", allowedHeaders = "*")
 public class UserController extends baseController{
 
     @Autowired
@@ -46,11 +53,11 @@ public class UserController extends baseController{
     public ReturnType register(@RequestParam(name="telephone")String telephone,
                                @RequestParam(name="optCode")String optCode,
                                @RequestParam(name="name")String name,
-                               @RequestParam(name="gender")String gender,
+                               @RequestParam(name="gender")Integer gender,
                                @RequestParam(name="age")Integer age,
-                               @RequestParam(name="password")String password) throws BusinessException {
+                               @RequestParam(name="password")String password) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
         //验证手机号和对应的optcode相符合
-        String inSessionOptCode = (String)this.httpServletRequest.getSession().getAttribute(telephone);
+        String inSessionOptCode = (String)httpServletRequest.getSession().getAttribute(telephone);
             // 用druid的比较防止都为null
         if(!StringUtils.equals(optCode, inSessionOptCode)){
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"短信验证码不符合");
@@ -58,7 +65,7 @@ public class UserController extends baseController{
         //用户注册
         UserModel userModel = new UserModel();
         userModel.setName(name);
-        userModel.setGender(new Byte(gender));
+        userModel.setGender(new Byte(String.valueOf(gender)));
         userModel.setAge(age);
         userModel.setTelephone(telephone);
         userModel.setRegisterMode("byphone");
@@ -67,10 +74,19 @@ public class UserController extends baseController{
          MD5是不可逆的单向加密方式,注册的时候如果密码用MD5的方式进行加密,那么在数据库中显示的密码就是经过MD5加密后的特征码,
          登录的时候,输入的密码会转换成MD5的格式与数据库的MD5特征码进行对比,一致就可以成功登录。
          */
-        userModel.setEncrptPassword(MD5Encoder.encode(password.getBytes()));
+        userModel.setEncrptPassword(this.encodeByMd5(password));
         userService.register(userModel);
         //返回用户界面
         return ReturnType.create(null);
+    }
+
+    public String encodeByMd5(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        //确定计算方法
+        MessageDigest md5 = MessageDigest.getInstance("MD5");
+        BASE64Encoder encoder = new BASE64Encoder();
+        //加密字符串
+        String newStr = encoder.encode(md5.digest(str.getBytes("utf-8")));
+        return newStr;
     }
 
     //获取短信的接口
@@ -86,7 +102,7 @@ public class UserController extends baseController{
 
         httpServletRequest.getSession().setAttribute(phoneNum, optCode);
         //将OPT验证码通过短信通道发送给用户
-        System.out.println("telephone =" + phoneNum + "& optCode =" + optCode);
+        System.out.println("telephone =" + phoneNum + " & optCode =" +  httpServletRequest.getSession().getAttribute(phoneNum));
         return ReturnType.create(null);
     }
 
