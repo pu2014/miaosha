@@ -10,4 +10,5 @@ import com.pu.service.model.UserModel;
 public interface IUserService {
     UserModel getUserById(Integer id);
     void register(UserModel userModel) throws BusinessException;
+    UserModel vaildateLogin(String telephone, String password) throws BusinessException;
 }

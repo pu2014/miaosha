@@ -8,11 +8,14 @@ import com.pu.error.BusinessException;
 import com.pu.error.EmBusinessError;
 import com.pu.service.IUserService;
 import com.pu.service.model.UserModel;
+import com.pu.validator.ValidationResult;
+import com.pu.validator.ValidatorImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import sun.awt.EmbeddedFrame;
 
 /**
  * Description:
@@ -26,6 +29,9 @@ public class UserServiceImpl implements IUserService {
 
     @Autowired
     private UserPasswordMapper userPasswordMapper;
+
+    @Autowired
+    private ValidatorImpl validator;
     @Override
     public UserModel getUserById(Integer id) {
         User user = userMapper.selectByPrimaryKey(id);
@@ -46,11 +52,15 @@ public class UserServiceImpl implements IUserService {
         if(userModel == null){
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
         }
-        if (StringUtils.isEmpty(userModel.getName())
+        /*if (StringUtils.isEmpty(userModel.getName())
                 || userModel.getGender() == null
                 || userModel.getAge() == null
                 || StringUtils.isEmpty(userModel.getTelephone())){
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }*/
+        ValidationResult result = validator.validate(userModel);
+        if(result.isHasErrors()){
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,result.getErrMsg());
         }
         //实现model -> user
         //insertSelective 防止插入null，而是插入字段为null时，插入数据库默认的值。
@@ -60,10 +70,28 @@ public class UserServiceImpl implements IUserService {
         }catch (DuplicateKeyException ex){
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"手机号已经注册");
         }
-        userMapper.insertSelective(user);
         //等到插入后的id
         userModel.setId(user.getId());
         userPasswordMapper.insertSelective(convertPasswordFromModel(userModel));
+    }
+
+    @Override
+    public UserModel vaildateLogin(String telephone, String password) throws BusinessException {
+        //通过用户的手机获取用户信息
+        User user = userMapper.selectByTelephone(telephone);
+        if(user == null){
+            throw new BusinessException(EmBusinessError.USER_LOGIN_FAIL);
+        }
+        UserPassword userPassword = userPasswordMapper.selectByUserId(user.getId());
+        UserModel userModel = convertFromDataObject(user, userPassword);
+
+        //密码校捡
+        if(!StringUtils.equals(password, userModel.getEncrptPassword())){
+            throw new BusinessException(EmBusinessError.USER_LOGIN_FAIL);
+        }
+        return userModel;
+
+
     }
 
     private UserPassword convertPasswordFromModel(UserModel userModel){
@@ -85,6 +113,13 @@ public class UserServiceImpl implements IUserService {
         BeanUtils.copyProperties(userModel, user);
         return user;
     }
+
+    /**
+     * user + password 转换为 model
+     * @param user
+     * @param password
+     * @return
+     */
     private UserModel convertFromDataObject(User user, UserPassword password){
         if(user == null){
             return null;

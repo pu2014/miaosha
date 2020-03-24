@@ -7,12 +7,11 @@ import com.pu.error.BusinessException;
 import com.pu.error.EmBusinessError;
 import com.pu.service.IUserService;
 import com.pu.service.model.UserModel;
-import org.apache.tomcat.util.security.MD5Encoder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import sun.misc.BASE64Decoder;
+
 import sun.misc.BASE64Encoder;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +42,24 @@ public class UserController extends baseController{
     @Autowired
     private HttpServletRequest httpServletRequest;
 
+
+
+    @ResponseBody
+    @RequestMapping(value="/login",method = {RequestMethod.POST},consumes = {CONTENT_TYPE_FORMED})
+    public ReturnType login(@RequestParam(name="telephone")String telephone, @RequestParam(name="password")String password) throws BusinessException, UnsupportedEncodingException, NoSuchAlgorithmException {
+        //入参校验
+        if(StringUtils.isEmpty(telephone) || StringUtils.isEmpty(password)){
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR);
+        }
+        //用户登录是否合法
+        UserModel userModel = userService.vaildateLogin(telephone, this.encodeByMd5(password));
+        //加入到用户登录成功的session类
+        //假设单点session登录
+        this.httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
+        this.httpServletRequest.getSession().setAttribute("LOGIN_USER", userModel);
+
+        return ReturnType.create(null);
+    }
     /**
      * 用户注册的接口
      * @param telephone
