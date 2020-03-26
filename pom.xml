@@ -41,6 +41,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!--开启热部署-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -107,8 +108,8 @@
                 <configuration>
                     <!--允许移动生成的文件,防止多次生成-->
                     <verbose>true</verbose>
-                    <!--允许自动覆盖-->
-                    <overwrite>true</overwrite>
+                    <!--允许自动覆盖  已经有了部分表就不让覆盖-->
+                    <overwrite>false</overwrite>
                     <configurationFile>
                         src/main/resources/mybatis-generator.xml
                     </configurationFile>

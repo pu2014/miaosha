@@ -15,8 +15,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import sun.awt.EmbeddedFrame;
-
 /**
  * Description:
  * Created By @Author my on @Date 2020/3/22 15:22
@@ -32,6 +30,7 @@ public class UserServiceImpl implements IUserService {
 
     @Autowired
     private ValidatorImpl validator;
+
     @Override
     public UserModel getUserById(Integer id) {
         User user = userMapper.selectByPrimaryKey(id);

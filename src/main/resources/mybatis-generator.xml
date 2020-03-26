@@ -32,6 +32,7 @@
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
         <!--生成对应表的类名-->
+        <!--
         <table tableName="user_info" domainObjectName="User"
                enableCountByExample="false"
                enableUpdateByExample="false"
@@ -40,6 +41,29 @@
                selectByExampleQueryId="false"
         ></table>
         <table tableName="user_password" domainObjectName="UserPassword"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableSelectByExample="false"
+               enableDeleteByExample="false"
+               selectByExampleQueryId="false"
+        ></table>
+        <table tableName="item" domainObjectName="Item"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableSelectByExample="false"
+               enableDeleteByExample="false"
+               selectByExampleQueryId="false"
+        ></table>
+        <table tableName="item_stock" domainObjectName="ItemStock"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableSelectByExample="false"
+               enableDeleteByExample="false"
+               selectByExampleQueryId="false"
+        >
+        </table>
+            -->
+        <table tableName="sequence_info" domainObjectName="Sequence"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableSelectByExample="false"
