@@ -63,7 +63,7 @@
         >
         </table>
             -->
-        <table tableName="sequence_info" domainObjectName="Sequence"
+        <table tableName="promo" domainObjectName="Promo"
                enableCountByExample="false"
                enableUpdateByExample="false"
                enableSelectByExample="false"

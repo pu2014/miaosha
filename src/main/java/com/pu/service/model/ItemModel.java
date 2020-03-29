@@ -17,6 +17,9 @@ import java.math.BigDecimal;
  */
 public class ItemModel {
 
+    //聚合模型  如果promoModel不为空，表示其具有没有结束的秒杀活动
+    private  PromoModel promoModel;
+
     private Integer id;
     //name
     @NotBlank(message = "商品名称不能为空")
@@ -95,5 +98,13 @@ public class ItemModel {
 
     public void setImgUrl(String imgUrl) {
         this.imgUrl = imgUrl;
+    }
+
+    public PromoModel getPromoModel() {
+        return promoModel;
+    }
+
+    public void setPromoModel(PromoModel promoModel) {
+        this.promoModel = promoModel;
     }
 }

@@ -10,7 +10,7 @@ public class OrderModel {
     //交易号 2020...
     private String id;
 
-    //单价
+    //单价 看是否是秒杀下单
     private BigDecimal itemPrice;
 
     //用户id
@@ -19,10 +19,13 @@ public class OrderModel {
     //商品id
     private Integer itemId;
 
+    //如果非空，表示以秒杀方式获取
+    private Integer promoId;
+
     //数量
     private Integer amount;
 
-    //购买金额
+    //购买金额  看是否是秒杀总价
     private BigDecimal orderPrice;
 
     public BigDecimal getItemPrice() {
@@ -72,8 +75,19 @@ public class OrderModel {
     public void setOrderAccount(BigDecimal orderAccount) {
         this.orderPrice = orderAccount;
     }
+    public BigDecimal getOrderPrice() {
+        return orderPrice;
+    }
 
+    public void setOrderPrice(BigDecimal orderPrice) {
+        this.orderPrice = orderPrice;
+    }
 
+    public Integer getPromoId() {
+        return promoId;
+    }
 
-
+    public void setPromoId(Integer promoId) {
+        this.promoId = promoId;
+    }
 }

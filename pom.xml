@@ -71,6 +71,11 @@
             <version>5.3.6.Final</version>
         </dependency>
 
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

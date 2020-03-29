@@ -7,6 +7,7 @@ import com.pu.error.BusinessException;
 import com.pu.service.IItemService;
 import com.pu.service.impl.ItemServiceImpl;
 import com.pu.service.model.ItemModel;
+import org.joda.time.format.DateTimeFormat;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -43,7 +44,7 @@ public class ItemController extends baseController {
     @GetMapping(value = "/getitem")
     @ResponseBody
     public ReturnType getItem(@RequestParam(name="id")Integer id){
-        return ReturnType.create(itemService.getItemById(id));
+        return ReturnType.create(convertViewFromModel(itemService.getItemById(id)));
     }
 
     @RequestMapping(value = "/create", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
@@ -76,6 +77,14 @@ public class ItemController extends baseController {
         }
         ItemView itemView = new ItemView();
         BeanUtils.copyProperties(itemModel, itemView);
+        if(itemModel.getPromoModel() != null){
+            itemView.setPromoStatus(itemModel.getPromoModel().getStatus());
+            itemView.setPromoId(itemModel.getPromoModel().getId());
+            itemView.setStartDate(itemModel.getPromoModel().getStartDate().toString(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")));
+            itemView.setPromoPrice(itemModel.getPromoModel().getPromoItemPrice());
+        }else{
+            itemView.setPromoStatus(0);
+        }
         return itemView;
     }
 

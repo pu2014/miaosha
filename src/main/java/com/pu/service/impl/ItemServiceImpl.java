@@ -7,7 +7,9 @@ import com.pu.domain.ItemStock;
 import com.pu.error.BusinessException;
 import com.pu.error.EmBusinessError;
 import com.pu.service.IItemService;
+import com.pu.service.IPromoService;
 import com.pu.service.model.ItemModel;
+import com.pu.service.model.PromoModel;
 import com.pu.validator.ValidationResult;
 import com.pu.validator.ValidatorImpl;
 import org.springframework.beans.BeanUtils;
@@ -36,6 +38,9 @@ public class ItemServiceImpl implements IItemService {
 
     @Autowired
     private ItemStockMapper itemStockMapper;
+
+    @Autowired
+    private IPromoService promoService;
 
 
     /**
@@ -96,7 +101,12 @@ public class ItemServiceImpl implements IItemService {
         ItemStock itemStock = itemStockMapper.selectByItemId(item.getId());
 
         //dataObj -- > model
-        return convertModelFromDataObject(item, itemStock);
+        ItemModel itemModel = convertModelFromDataObject(item, itemStock);
+        PromoModel promoModel = promoService.getPromoByItemId(itemModel.getId());
+        if(promoModel != null && promoModel.getStatus().intValue() != 3){
+            itemModel.setPromoModel(promoModel);
+        }
+        return itemModel;
     }
 
     @Override

@@ -46,7 +46,7 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional
-    public OrderModel createOrder(Integer userId, Integer itemId, Integer amount) throws BusinessException {
+    public OrderModel createOrder(Integer userId, Integer itemId, Integer promoId, Integer amount) throws BusinessException {
         //校验下单状态，用户是否合法，购买数量是否正确
         ItemModel itemModel = itemService.getItemById(itemId);
         if(itemModel == null){
@@ -62,18 +62,34 @@ public class OrderServiceImpl implements IOrderService {
             throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR, "至少下单数为1，至多下单100");
         }
 
+        //校验活动信息
+        if(promoId != null){
+            //（1）校验对应活动是否存在这个适用商品
+            if(promoId.intValue() != itemModel.getPromoModel().getId()){
+                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR, "活动信息不正确");
+            }else if(itemModel.getPromoModel().getStatus().intValue() != 2){
+                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR, "活动还未开始");
+            }
+        }
+
         //落单减库存 锁单 （另外还有支付减库存）
         boolean result = itemService.decreaseStock(itemId, amount);
         if(!result){
             throw new BusinessException(EmBusinessError.STOCK_NOT_ENOUGH,"商品库存不足");
         }
+
         //订单入库
         OrderModel orderModel = new OrderModel();
         orderModel.setUserId(userId);
         orderModel.setItemId(itemId);
         orderModel.setAmount(amount);
-        orderModel.setItemPrice(itemModel.getPrice());
-        orderModel.setOrderAccount(itemModel.getPrice().multiply(new BigDecimal(amount)));
+        if(promoId != null){
+            orderModel.setItemPrice(itemModel.getPromoModel().getPromoItemPrice());
+        }else {
+            orderModel.setItemPrice(itemModel.getPrice());
+        }
+        orderModel.setPromoId(promoId);
+        orderModel.setOrderAccount(orderModel.getItemPrice().multiply(new BigDecimal(amount)));
 
         //生成交易流水号
         orderModel.setId(generateOrderNo());
