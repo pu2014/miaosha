@@ -4,12 +4,13 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * Description:
  * Created By @Author my on @Date 2020/3/22 15:24
  */
-public class UserModel {
+public class UserModel implements Serializable {
 
     private Integer id;
     @NotBlank(message = "用户名不能为空")

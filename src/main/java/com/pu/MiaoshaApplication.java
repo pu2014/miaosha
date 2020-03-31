@@ -17,19 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @MapperScan("com.pu.dao")
 public class MiaoshaApplication {
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @GetMapping("/")
-    public String home(){
-        User user = userMapper.selectByPrimaryKey(1);
-        if(user == null){
-            return "用户对象不存在";
-        }else{
-            return user.getName();
-        }
-    }
     public static void main(String[] args) {
         SpringApplication.run(MiaoshaApplication.class, args);
     }

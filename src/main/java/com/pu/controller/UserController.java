@@ -56,6 +56,7 @@ public class UserController extends baseController{
         //加入到用户登录成功的session类
         //假设单点session登录
         this.httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
+        //存入redis缓存必须实现Serializable接口（也可以修改redis配置使其支持json格式）
         this.httpServletRequest.getSession().setAttribute("LOGIN_USER", userModel);
 
         return ReturnType.create(null);
