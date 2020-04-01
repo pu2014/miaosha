@@ -9,6 +9,8 @@ import com.pu.service.IUserService;
 import com.pu.service.model.UserModel;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Description:
@@ -42,6 +46,10 @@ public class UserController extends baseController{
     @Autowired
     private HttpServletRequest httpServletRequest;
 
+    @Qualifier("redisTemplate")
+    @Autowired
+    private RedisTemplate redisTemplatel;
+
 
 
     @ResponseBody
@@ -55,11 +63,22 @@ public class UserController extends baseController{
         UserModel userModel = userService.vaildateLogin(telephone, this.encodeByMd5(password));
         //加入到用户登录成功的session类
         //假设单点session登录
+        /*
         this.httpServletRequest.getSession().setAttribute("IS_LOGIN", true);
         //存入redis缓存必须实现Serializable接口（也可以修改redis配置使其支持json格式）
         this.httpServletRequest.getSession().setAttribute("LOGIN_USER", userModel);
+        */
 
-        return ReturnType.create(null);
+        //基于Java实现token传输sessionid
+        // 修改为用户登录验证成功将对应的登录信息和登录凭证一起存入redis中
+        //生成登录凭证token，UUID
+        String uuidToken = UUID.randomUUID().toString();
+        uuidToken = uuidToken.replace("-", "");
+        //建立token和用户登录态之间的联系
+        redisTemplatel.opsForValue().set(uuidToken, userModel);
+        //5分钟失效
+        redisTemplatel.expire(uuidToken, 5, TimeUnit.MINUTES);
+        return ReturnType.create(uuidToken);
     }
     /**
      * 用户注册的接口
