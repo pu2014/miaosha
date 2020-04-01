@@ -2,13 +2,14 @@ package com.pu.service.model;
 
 import org.joda.time.DateTime;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * Description:秒杀模型
  * Created By @Author my on @Date 2020/3/27 10:39
  */
-public class PromoModel {
+public class PromoModel implements Serializable {
     private Integer id;
 
 

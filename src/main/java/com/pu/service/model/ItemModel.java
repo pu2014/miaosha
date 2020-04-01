@@ -3,6 +3,7 @@ package com.pu.service.model;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
  * 只能作用在String上，不能为null，而且调用trim()后，长度必须大于0 ("test") 即：必须有实际字符
  * Created By @Author my on @Date 2020/3/26 10:48
  */
-public class ItemModel {
+public class ItemModel implements Serializable {
 
     //聚合模型  如果promoModel不为空，表示其具有没有结束的秒杀活动
     private  PromoModel promoModel;

@@ -1,12 +1,13 @@
 package com.pu.service.model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * Description:用 户下单的交易模型  订单
  * Created By @Author my on @Date 2020/3/26 22:12
  */
-public class OrderModel {
+public class OrderModel implements Serializable {
     //交易号 2020...
     private String id;
 

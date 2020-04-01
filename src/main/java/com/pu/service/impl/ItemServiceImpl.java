@@ -14,6 +14,8 @@ import com.pu.validator.ValidationResult;
 import com.pu.validator.ValidatorImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +43,7 @@ public class ItemServiceImpl implements IItemService {
 
     @Autowired
     private IPromoService promoService;
+
 
 
     /**

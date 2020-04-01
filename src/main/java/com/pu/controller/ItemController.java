@@ -4,17 +4,21 @@ import com.pu.commom.ReturnType;
 import com.pu.controller.view.ItemView;
 import com.pu.domain.Item;
 import com.pu.error.BusinessException;
+import com.pu.service.ICacheService;
 import com.pu.service.IItemService;
 import com.pu.service.impl.ItemServiceImpl;
 import com.pu.service.model.ItemModel;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -30,6 +34,13 @@ public class ItemController extends baseController {
     @Autowired
     private IItemService itemService;
 
+    @Autowired
+    @Qualifier("redisTemplate")
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private ICacheService cacheService;
+
     @GetMapping(value = "/listitem")
     @ResponseBody
     public ReturnType listItem() {
@@ -41,11 +52,34 @@ public class ItemController extends baseController {
         return ReturnType.create(itemViews);
     }
 
+    /**
+     * 多级缓存-热点缓存
+     * @param id
+     * @return
+     */
     @GetMapping(value = "/getitem")
     @ResponseBody
     public ReturnType getItem(@RequestParam(name="id")Integer id){
-        return ReturnType.create(convertViewFromModel(itemService.getItemById(id)));
+        ItemModel itemModel = null;
+        //先去本地缓存
+        itemModel = (ItemModel) cacheService.getFromCommonCache("item_" + id);
+
+        if(itemModel == null) {
+            //根据商品的id去redis获取
+            itemModel = (ItemModel) redisTemplate.opsForValue().get("item_" + id);
+
+            //不存在就访问下游service
+            if (itemModel == null) {
+                itemModel = itemService.getItemById(id);
+                //存储到redis
+                redisTemplate.opsForValue().set("item_" + id, itemModel);
+                redisTemplate.expire("item_" + id, 10, TimeUnit.MINUTES);
+            }
+            cacheService.setCommonCache("item_" + id, itemModel);
+        }
+        return ReturnType.create(convertViewFromModel(itemModel));
     }
+
 
     @RequestMapping(value = "/create", method = {RequestMethod.POST}, consumes = {CONTENT_TYPE_FORMED})
     @ResponseBody
@@ -57,10 +91,8 @@ public class ItemController extends baseController {
         //封装service请求用来创建商品
         //尽量让Controller层简单，让Service层负责，把服务逻辑尽可能聚合在Service层内部，实现流转处理
         //创建给service层的
-        System.out.println("dad???");
         ItemModel itemModel = new ItemModel();
         itemModel.setTitle(title);
-        System.out.println("dad???");
         itemModel.setDescription(description);
         itemModel.setPrice(price);
         itemModel.setStock(stock);
