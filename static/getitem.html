@@ -79,11 +79,17 @@
     var g_itemVO = {};
     jQuery(document).ready(function () {
         $("#createorder").on("click", function () {
+            var token = window.localStorage["token"];
+            if(token == null){
+                alert("你还没有登录，请登录后下单");
+                window.location.href="login.html";
+                return false;
+            }
             //获取订单详情
             $.ajax({
                 type:"POST",
                 contentType:"application/x-www-form-urlencoded",
-                url:"http://" + g_host + "/order/createorder",
+                url:"http://" + g_host + "/order/createorder?token=" + token,
                 data:{
                     "itemId":g_itemVO.id,
                     "amount":1,
