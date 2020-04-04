@@ -1,6 +1,6 @@
 package com.pu.controller;
 
-import com.pu.commom.ReturnType;
+import com.pu.response.ReturnType;
 import com.pu.error.BusinessException;
 import com.pu.error.EmBusinessError;
 import org.springframework.http.HttpStatus;

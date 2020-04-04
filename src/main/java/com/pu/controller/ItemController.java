@@ -1,12 +1,11 @@
 package com.pu.controller;
 
-import com.pu.commom.ReturnType;
+import com.pu.response.ReturnType;
 import com.pu.controller.view.ItemView;
-import com.pu.domain.Item;
 import com.pu.error.BusinessException;
 import com.pu.service.ICacheService;
 import com.pu.service.IItemService;
-import com.pu.service.impl.ItemServiceImpl;
+import com.pu.service.IPromoService;
 import com.pu.service.model.ItemModel;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.beans.BeanUtils;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +38,10 @@ public class ItemController extends baseController {
 
     @Autowired
     private ICacheService cacheService;
+
+    @Autowired
+    private IPromoService promoService;
+
 
     @GetMapping(value = "/listitem")
     @ResponseBody
@@ -78,6 +80,18 @@ public class ItemController extends baseController {
             cacheService.setCommonCache("item_" + id, itemModel);
         }
         return ReturnType.create(convertViewFromModel(itemModel));
+    }
+
+    /**
+     * 发布活动 一般运营后台执行
+     * @param id
+     * @return
+     */
+    @GetMapping(value = "/publishpromo")
+    @ResponseBody
+    public ReturnType publishPromo(@RequestParam(name="id")Integer id){
+        promoService.PublishPromo(id);
+        return ReturnType.create("活动发布成功");
     }
 
 

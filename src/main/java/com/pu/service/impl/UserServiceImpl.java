@@ -13,8 +13,15 @@ import com.pu.validator.ValidatorImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import javax.validation.constraints.Min;
+import java.net.URLDecoder;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Description:
  * Created By @Author my on @Date 2020/3/22 15:22
@@ -31,6 +38,10 @@ public class UserServiceImpl implements IUserService {
     @Autowired
     private ValidatorImpl validator;
 
+    @Autowired
+    @Qualifier("redisTemplate")
+    private RedisTemplate redisTemplate;
+
     @Override
     public UserModel getUserById(Integer id) {
         User user = userMapper.selectByPrimaryKey(id);
@@ -40,6 +51,17 @@ public class UserServiceImpl implements IUserService {
         //用户id获取用户加密密码信息
         UserPassword userPassword = userPasswordMapper.selectByUserId(id);
         return convertFromDataObject(user, userPassword);
+    }
+
+    @Override
+    public UserModel getUserByIdInCache(Integer id) {
+        UserModel userModel = (UserModel) redisTemplate.opsForValue().get("user_validate_" + id);
+        if(userModel == null){
+            userModel = getUserById(id);
+            redisTemplate.opsForValue().set("user_validate_" + id, userModel);
+            redisTemplate.expire("user_validate_" + id, 10, TimeUnit.MINUTES);
+        }
+        return userModel;
     }
 
     /**

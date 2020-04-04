@@ -1,17 +1,25 @@
 package com.pu.service.impl;
 
+import ch.qos.logback.classic.turbo.TurboFilter;
 import com.pu.dao.ItemMapper;
 import com.pu.dao.ItemStockMapper;
+import com.pu.dao.StockLogMapper;
 import com.pu.domain.Item;
 import com.pu.domain.ItemStock;
+import com.pu.domain.StockLog;
 import com.pu.error.BusinessException;
 import com.pu.error.EmBusinessError;
+import com.pu.mq.MqProducer;
 import com.pu.service.IItemService;
 import com.pu.service.IPromoService;
 import com.pu.service.model.ItemModel;
 import com.pu.service.model.PromoModel;
 import com.pu.validator.ValidationResult;
 import com.pu.validator.ValidatorImpl;
+import org.apache.rocketmq.client.exception.MQBrokerException;
+import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -43,6 +53,16 @@ public class ItemServiceImpl implements IItemService {
 
     @Autowired
     private IPromoService promoService;
+
+    @Autowired
+    @Qualifier("redisTemplate")
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private MqProducer mqProducer;
+
+    @Autowired
+    private StockLogMapper stockLogMapper;
 
 
 
@@ -113,18 +133,88 @@ public class ItemServiceImpl implements IItemService {
     }
 
     @Override
+    public ItemModel getItemByIdInCache(Integer id) {
+        ItemModel itemModel = (ItemModel) redisTemplate.opsForValue().get("item_validate_" + id);
+        if(itemModel == null){
+            itemModel = this.getItemById(id);
+            redisTemplate.opsForValue().set("item_validate_" + id, itemModel);
+            redisTemplate.expire("item_validate_" + id, 10, TimeUnit.MINUTES);
+        }
+        return itemModel;
+    }
+
+    @Override
+    public boolean asynDecreaseStock(Integer itemId, Integer amount) {
+        boolean sendResult = mqProducer.asyncReduceStock(itemId, amount);
+        return sendResult;
+    }
+
+    @Override
     @Transactional
     public boolean decreaseStock(Integer itemId, Integer amount) {
         //影响的条目数
         //对于sql是原子操作
-        int affectRow = itemStockMapper.decreaseStock(itemId, amount);
-        return affectRow != 0 ? true : false;
+        //int affectRow = itemStockMapper.decreaseStock(itemId, amount);
+
+        //使用redis缓存
+        long result = redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount * -1);
+        //return result >= 0 ? true : false;
+
+        //更新redis成功
+            if(result > 0){
+                /**
+            //使用mq消息队列 更新数据库库存，利用异步消息
+            boolean sendResult = mqProducer.asyncReduceStock(itemId, amount);
+            //消息发送不成功
+            if(!sendResult){
+                //redis回滚
+                redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
+                return false;
+            }
+             */
+            return true;
+        }else if(result == 0){
+            //售罄
+            redisTemplate.opsForValue().set("promo_item_stock_invalid_" + itemId, "true");
+            return true;
+        }else{
+        //更新redis失败,回滚
+        increaseStock(itemId, amount);
+        return false;
+
+        }
+    }
+
+    @Override
+    public boolean increaseStock(Integer itemId, Integer amount) {
+        redisTemplate.opsForValue().increment("promo_item_stock_" + itemId, amount.intValue());
+        return true;
     }
 
     @Override
     @Transactional
     public void increaseSales(Integer itemId, Integer amount) {
         itemMapper.increaseSales(itemId, amount);
+    }
+
+
+    /**
+     * 库存售罄
+     * @param itemId
+     * @param amount
+     * @return
+     */
+    //初始化对应的库存流水
+    @Override
+    @Transactional
+    public String initStockLog(Integer itemId, Integer amount) {
+        StockLog stockLog = new StockLog();
+        stockLog.setItemId(itemId);
+        stockLog.setAmount(amount);
+        stockLog.setStockLogId(UUID.randomUUID().toString().replace("-", ""));
+        stockLog.setStatus(1);//初始状态为1
+        stockLogMapper.insertSelective(stockLog);
+        return stockLog.getStockLogId();
     }
 
     private Item convertItemFromItemModel(ItemModel itemModel){

@@ -1,7 +1,7 @@
 package com.pu.controller;
 
 import com.alibaba.druid.util.StringUtils;
-import com.pu.commom.ReturnType;
+import com.pu.response.ReturnType;
 import com.pu.controller.view.UserView;
 import com.pu.error.BusinessException;
 import com.pu.error.EmBusinessError;

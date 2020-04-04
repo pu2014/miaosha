@@ -32,6 +32,14 @@
         <javaClientGenerator type="XMLMAPPER" targetPackage="com.pu.dao"  targetProject="src/main/java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
+
+        <table tableName="stock_log" domainObjectName="StockLog"
+               enableCountByExample="false"
+               enableUpdateByExample="false"
+               enableSelectByExample="false"
+               enableDeleteByExample="false"
+               selectByExampleQueryId="false"
+        ></table>
     </context>
 </generatorConfiguration>
         <!--生成对应表的类名-->
@@ -66,10 +74,3 @@
         >
         </table>
         -->
-<!--        <table tableName="promo" domainObjectName="Promo"-->
-<!--               enableCountByExample="false"-->
-<!--               enableUpdateByExample="false"-->
-<!--               enableSelectByExample="false"-->
-<!--               enableDeleteByExample="false"-->
-<!--               selectByExampleQueryId="false"-->
-<!--        ></table>-->

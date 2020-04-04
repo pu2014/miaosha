@@ -8,4 +8,9 @@ import com.pu.service.model.PromoModel;
  */
 public interface IPromoService {
     PromoModel getPromoByItemId(Integer itemId);
+    //活动发布
+    void PublishPromo(Integer promoId);
+
+    //生成秒杀活动用的令牌
+    String generateSecondKillToken(Integer promoId, Integer itemId, Integer userId);
 }

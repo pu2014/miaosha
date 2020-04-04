@@ -1,4 +1,4 @@
-package com.pu.commom;
+package com.pu.response;
 
 /**
  * Description:统一返回结果

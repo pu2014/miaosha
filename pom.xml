@@ -42,10 +42,10 @@
             </exclusions>
         </dependency>
         <!--开启热部署-->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-devtools</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -92,6 +92,12 @@
             <version>18.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>4.3.0</version>
+        </dependency>
+
 
     </dependencies>
 
@@ -125,7 +131,7 @@
                     <dependency>
                         <groupId>mysql</groupId>
                         <artifactId>mysql-connector-java</artifactId>
-                        <version>8.0.19</version>
+                        <version>5.1.6</version>
                     </dependency>
                 </dependencies>
                 <executions>
@@ -141,7 +147,7 @@
                     <!--允许移动生成的文件,防止多次生成-->
                     <verbose>true</verbose>
                     <!--允许自动覆盖  已经有了部分表就不让覆盖-->
-                    <overwrite>false</overwrite>
+                    <overwrite>true</overwrite>
                     <configurationFile>
                         src/main/resources/mybatis-generator.xml
                     </configurationFile>

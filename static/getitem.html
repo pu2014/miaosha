@@ -58,9 +58,16 @@
             <label  class="control-label" id="sales"/>
         </div>
     </div>
-    <div>
+    <div class="form-actions">
         <button class="btn blue" id="createorder" type="submit">
             下单
+        </button>
+    </div>
+    <div id="verifyDiv" style="display: none" class="form-actions">
+        <img src=""/>
+        <input type="text" id="verifyContent" value=""/>
+        <button class="btn blue" id="verify" type="submit">
+            验证
         </button>
     </div>
 </div>
@@ -78,42 +85,77 @@
     }
     var g_itemVO = {};
     jQuery(document).ready(function () {
-        $("#createorder").on("click", function () {
+        $("#verify").on("click", function () {
             var token = window.localStorage["token"];
-            if(token == null){
-                alert("你还没有登录，请登录后下单");
-                window.location.href="login.html";
-                return false;
-            }
-            //获取订单详情
+            //获取秒杀请求
             $.ajax({
-                type:"POST",
-                contentType:"application/x-www-form-urlencoded",
-                url:"http://" + g_host + "/order/createorder?token=" + token,
-                data:{
-                    "itemId":g_itemVO.id,
-                    "amount":1,
-                    "promoId":g_itemVO.promoId
+                type: "POST",
+                contentType: "application/x-www-form-urlencoded",
+                url: "http://" + g_host + "/order/generatetoken?token=" + token,
+                data: {
+                    "itemId": g_itemVO.id,
+                    "promoId": g_itemVO.promoId,
+                    "verifyCode":$("#verifyContent").val()
                 },
-                xhrFields:{
-                    withCredentials:true
+                xhrFields: {
+                    withCredentials: true
                 },
-                success:function (data) {
-                    if(data.status == "success"){
-                        alert("下单成功");
-                        window.location.reload();
-                    }else{
-                        alert("下单失败，原因为" + data.data.errMsg);
-                        if(data.data.errCode == 20003){
-                            window.location.href= "login.html";
+                success: function (data) {
+                    if (data.status == "success") {
+                        var promoToken = data.data;
+                        //获取订单详情
+                        $.ajax({
+                            type: "POST",
+                            contentType: "application/x-www-form-urlencoded",
+                            url: "http://" + g_host + "/order/createorder?token=" + token,
+                            data: {
+                                "itemId": g_itemVO.id,
+                                "amount": 1,
+                                "promoId": g_itemVO.promoId,
+                                "promoToken": promoToken
+                            },
+                            xhrFields: {
+                                withCredentials: true
+                            },
+                            success: function (data) {
+                                if (data.status == "success") {
+                                    alert("下单成功");
+                                    window.location.reload();
+                                } else {
+                                    alert("下单失败，原因为" + data.data.errMsg);
+                                    if (data.data.errCode == 20003) {
+                                        window.location.href = "login.html";
+                                    }
+                                }
+                            },
+                            error: function (data) {
+                                alert("下单失败，原因为" + data.responseText);
+                            }
+                        });
+
+                    } else {
+                        alert("获取令牌失败，原因为" + data.data.errMsg);
+                        if (data.data.errCode == 20003) {
+                            window.location.href = "login.html";
                         }
                     }
                 },
-                error:function (data) {
+                error: function (data) {
                     alert("下单失败，原因为" + data.responseText);
                 }
             });
         });
+        $("#createorder").on("click", function () {
+            var token = window.localStorage["token"];
+            if (token == null) {
+                alert("你还没有登录，请登录后下单");
+                window.location.href = "login.html";
+                return false;
+            }
+            $("#verifyDiv img").attr("src", "http://" + g_host + "/order/generateverifycode?token=" + token);
+            $("#verifyDiv").show();
+        });
+
         //获取商品详情
         $.ajax({
             type:"GET",

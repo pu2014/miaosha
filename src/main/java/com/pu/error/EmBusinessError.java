@@ -12,9 +12,11 @@ public enum EmBusinessError implements Error {
     USER_LOGIN_FAIL(20002,"用户手机号或者密码不正确"),
     USER_NOT_LOGIN(20003,"用户未登录"),
     //未知错误
-    UNKNOWN_ERROR(30001,"未知错误"),
+    UNKNOWN_ERROR(40001,"未知错误"),
     //40000交易信息错误定义
-    STOCK_NOT_ENOUGH(3001,"库存不足")
+    STOCK_NOT_ENOUGH(30001,"库存不足"),
+    MQ_SEND_FAIL(30002, "异步消息发送失败"),
+    RETELIMIT_ERROR(30003, "活动太火爆，请稍后再试"),
     ;
 
     EmBusinessError(int errCode, String errMsg) {
