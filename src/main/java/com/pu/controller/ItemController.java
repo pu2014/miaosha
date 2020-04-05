@@ -69,7 +69,6 @@ public class ItemController extends baseController {
         if(itemModel == null) {
             //根据商品的id去redis获取
             itemModel = (ItemModel) redisTemplate.opsForValue().get("item_" + id);
-
             //不存在就访问下游service
             if (itemModel == null) {
                 itemModel = itemService.getItemById(id);
@@ -79,6 +78,11 @@ public class ItemController extends baseController {
             }
             cacheService.setCommonCache("item_" + id, itemModel);
         }
+        //如果库存减少了，销量加上去，库存减下来 让请求的数据尽量少
+        Integer stockNew = (Integer) redisTemplate.opsForValue().get("promo_item_stock_" + itemModel.getId());
+        itemModel.setSales(itemModel.getSales() + (itemModel.getStock() - stockNew));
+        itemModel.setStock(stockNew);
+
         return ReturnType.create(convertViewFromModel(itemModel));
     }
 

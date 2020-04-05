@@ -53,15 +53,15 @@ public class OrderController extends baseController {
 
     @Autowired
     private IPromoService promoService;
-
-    private ExecutorService executorService;
-
+    //google guava的限流桶
     private RateLimiter orderCreateRateLimiter;
-
+    //多线程实现队列泄洪
+    private ExecutorService executorService;
     @PostConstruct
     public void init(){
-        //开启20个线程大小的线程池
+        //开启固定大小的20个线程大小的线程池,创建固定数量的可复用的线程数，来执行任务。当线程数达到最大核心线程数，则加入队列等待有空闲线程时再执行
         executorService = Executors.newFixedThreadPool(20);
+        //限流桶,设置相当于QPS，超过就被限制
         orderCreateRateLimiter = RateLimiter.create(300);
     }
     //生成验证码
@@ -185,7 +185,7 @@ public class OrderController extends baseController {
         });
 
         try {
-            future.get();
+            future.get(); // 获取submit（Callable）的结果;
         } catch (InterruptedException | ExecutionException e) {
             throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
         }
