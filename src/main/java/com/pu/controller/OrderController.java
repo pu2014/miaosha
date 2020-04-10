@@ -1,5 +1,10 @@
 package com.pu.controller;
 
+
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnel;
+import com.google.common.hash.Funnels;
+import com.google.common.hash.PrimitiveSink;
 import com.google.common.util.concurrent.RateLimiter;
 import com.pu.response.ReturnType;
 import com.pu.error.BusinessException;
@@ -23,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -91,6 +97,21 @@ public class OrderController extends baseController {
     public ReturnType generateToken(@RequestParam(name="itemId")Integer itemId,
                                     @RequestParam(name="promoId")Integer promoId,
                                     @RequestParam(name="verifyCode")String verifyCode) throws BusinessException {
+        //布隆过滤器
+        /*BloomFilter<String> filter = BloomFilter.create(new Funnel<String>() {
+            @Override
+            public void funnel(String from, PrimitiveSink into) {
+                into.putString((CharSequence)from, Charset.forName("UTF-8"));
+            }
+        }, 10, 0.001);*/
+        BloomFilter<Integer> filter = BloomFilter.create(Funnels.integerFunnel(),10, 0.001);
+        filter.put(7);
+        filter.put(8);
+        //不包含itemid，100%错误，直接返回无效请求
+        if(!filter.mightContain(itemId)){
+            throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR, "无效请求");
+        }
+
         //根据token获取用户信息
         String token = httpServletRequest.getParameterMap().get("token")[0];
         if(StringUtils.isEmpty(token)){
@@ -124,7 +145,6 @@ public class OrderController extends baseController {
                                   @RequestParam(name="amount")Integer amount,
                                   @RequestParam(name="promoId",required = false)Integer promoId,
                                   @RequestParam(name="promoToken",required = false)String promoToken) throws BusinessException {
-
         if(!orderCreateRateLimiter.tryAcquire()){
             throw new BusinessException(EmBusinessError.RETELIMIT_ERROR);
         }
